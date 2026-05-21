@@ -1,3 +1,9 @@
 {
-  "buildCommand": "echo 'build complete'"
+  "buildCommand": "echo 'build'",
+  "public": ".",
+  "functions": {
+    "api/generateName.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
