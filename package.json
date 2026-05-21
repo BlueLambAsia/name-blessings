@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "name": "name-blessings",
+  "version": "1.0.0",
+  "description": "Name Blessings Generator",
+  "main": "api/generateName.js"
+}
