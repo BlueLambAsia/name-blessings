@@ -18,10 +18,27 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing name data' });
     }
 
-    const prompt = `You are an expert in biblical name analysis, etymology, and Chinese character interpretation. A user has provided an English name and a Chinese name. Provide thoughtful, natural interpretations connecting these names to their deeper spiritual significance and meaning in life.
+    const prompt = `You are an expert in name analysis, etymology, and character interpretation. Provide thoughtful, natural insights into what these names reveal about character, purpose, and life direction.
 
 English Name: ${englishName}
 Chinese Name: ${chineseName}
+
+CRITICAL - Avoid these words and concepts completely:
+- karma, destiny, reincarnation, enlightenment, energy, yin/yang, chakra, Buddha, Tao, dharma, nirvana
+- Do NOT mention any non-Christian religious systems or philosophies
+- Do NOT use mystical or supernatural language
+- Do NOT reference other religions at all
+
+DO use natural, everyday language about:
+- Character strengths and virtues
+- Purpose and calling in life
+- Personal integrity and values
+- Service to others
+- Hard work and dedication
+- Wisdom and growth
+- Hope and encouragement
+- Love and compassion
+- Strength through faith and perseverance
 
 Please analyze these names and provide their meanings in the following JSON format ONLY. Return valid JSON with no additional text:
 
@@ -30,20 +47,21 @@ Please analyze these names and provide their meanings in the following JSON form
   "chineseMeanings": [
     {
       "character": "First character",
-      "meaning": "Explanation of what this character means and its deeper significance in life and character"
+      "meaning": "Explanation of what this character represents - focus on qualities like integrity, diligence, strength, wisdom, love, or how it shapes character and purpose."
     }
   ],
-  "summary": "A single paragraph (about 150 words) that combines both names, provides thoughtful encouragement about how these names speak to God's design and purpose, and explains how they work together to reveal a beautiful life calling.",
+  "summary": "A single paragraph (about 150 words) that combines both names thoughtfully, provides genuine encouragement about the strengths and potential these names suggest, and speaks to how they point toward a meaningful life direction.",
   "verseText": "A relevant Bible verse that matches the names' meanings and themes",
   "verseRef": "The Bible reference in format like 'John 3:16 (NIV)'"
 }
 
-Important:
-- The englishMeaning should be 2-3 sentences explaining the name's origin and what it reveals about character or calling
-- The chineseMeanings array should have one object for each character in the Chinese name
-- Each character meaning should connect naturally to themes of faith, purpose, blessing, character development, and God's design - but write naturally without being preachy or formulaic
-- The summary should feel like a genuine reflection on how these names reveal God's purpose and blessing in someone's life
-- The verseText should be just the quote without quotation marks
+Guidelines:
+- Sound natural and conversational, like genuine character insight
+- Focus on real human qualities: honesty, courage, compassion, determination, faithfulness, service
+- For work/contribution meanings: use "purpose," "calling," "meaningful work," "using your gifts"
+- For impact/legacy: use "influence," "positive impact," "living with integrity," "serving others well"
+- The summary should feel warm and encouraging, like a thoughtful friend reflecting on someone's potential
+- Never sound preachy, mystical, or formulaic
 - Make sure all JSON is valid and properly formatted`;
 
     try {
