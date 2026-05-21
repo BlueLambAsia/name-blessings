@@ -18,30 +18,32 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing name data' });
     }
 
-    const prompt = `You are an expert in name meanings, etymology, and Chinese character interpretation. A user has provided an English name and a Chinese name.
+    const prompt = `You are an expert in Christian name analysis, etymology, and Chinese character interpretation from a Christian perspective. A user has provided an English name and a Chinese name.
 
 English Name: ${englishName}
 Chinese Name: ${chineseName}
 
-Please analyze these names and provide their meanings in the following JSON format ONLY. Return valid JSON with no additional text:
+Please analyze these names and provide their meanings in the following JSON format ONLY. Return valid JSON with no additional text. IMPORTANT: Interpret everything from a Christian biblical perspective. Avoid references to Buddhism, Taoism, or other non-Christian philosophies. Focus on Christian virtues, biblical meanings, and Christian values:
 
 {
-  "englishMeaning": "A paragraph explaining the etymology and meaning of the English name.",
+  "englishMeaning": "A paragraph explaining the etymology and Christian meaning of the English name.",
   "chineseMeanings": [
     {
       "character": "First character",
-      "meaning": "Explanation of what this character means"
+      "meaning": "Explanation of what this character means from a Christian perspective, relating to Christian virtues, biblical principles, or God's character"
     }
   ],
-  "summary": "A single paragraph (about 150 words) that combines both names, provides encouragement with Christian content, and explains how they complement each other.",
+  "summary": "A single paragraph (about 150 words) that combines both names, provides encouragement with Christian content, explains how they complement each other from a Christian perspective, and emphasizes God's purpose and blessing.",
   "verseText": "A relevant Bible verse that matches the names' meanings and themes",
   "verseRef": "The Bible reference in format like 'John 3:16 (NIV)'"
 }
 
 Important:
-- The englishMeaning should be 2-3 sentences explaining the name's origin and significance
+- The englishMeaning should be 2-3 sentences explaining the name's Christian origin and significance
 - The chineseMeanings array should have one object for each character in the Chinese name
-- The summary must be encouraging with Christian themes, one continuous paragraph, and not start with "Dear"
+- ALWAYS interpret Chinese characters from a CHRISTIAN perspective only - relate meanings to Christian virtues like faith, hope, love, righteousness, stewardship, service, obedience, strength in God, etc.
+- Avoid ALL references to Buddhism, Taoism, karma, or other non-Christian philosophies
+- The summary must be encouraging with strong Christian themes, one continuous paragraph, and not start with "Dear"
 - The verseText should be just the quote without quotation marks
 - Make sure all JSON is valid and properly formatted`;
 
