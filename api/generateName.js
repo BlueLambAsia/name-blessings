@@ -1,479 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Name Blessings Generator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lora:wght@400;500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-        :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #d4af37;
-            --light: #ecf0f1;
-            --lighter: #f8f9fa;
-            --text: #2c3e50;
-            --text-light: #7f8c8d;
-            --card-bg: #ffffff;
-            --border: #e0e0e0;
-        }
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
 
-        body {
-            font-family: 'Lora', serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: var(--text);
-            line-height: 1.8;
-            min-height: 100vh;
-        }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
+    const { englishName, chineseName } = req.body;
 
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-            animation: slideDown 0.8s ease-out;
-        }
+    if (!englishName || !chineseName) {
+        return res.status(400).json({ error: 'Missing name data' });
+    }
 
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            letter-spacing: -1px;
-        }
+    const prompt = `You are an expert in name meanings, etymology, and Chinese character interpretation. A user has provided an English name and a Chinese name.
 
-        .subtitle {
-            font-size: 1.1rem;
-            color: var(--text-light);
-            font-style: italic;
-            font-weight: 400;
-        }
+English Name: ${englishName}
+Chinese Name: ${chineseName}
 
-        .accent-line {
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent), transparent);
-            margin: 20px auto;
-        }
+Please analyze these names and provide their meanings in the following JSON format ONLY. Return valid JSON with no additional text:
 
-        .section {
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-            margin-bottom: 50px;
-            animation: slideUp 0.8s ease-out 0.2s both;
-        }
+{
+  "englishMeaning": "A paragraph explaining the etymology and meaning of the English name.",
+  "chineseMeanings": [
+    {
+      "character": "First character",
+      "meaning": "Explanation of what this character means"
+    }
+  ],
+  "summary": "A single paragraph (about 150 words) that combines both names, provides encouragement with Christian content, and explains how they complement each other.",
+  "verseText": "A relevant Bible verse that matches the names' meanings and themes",
+  "verseRef": "The Bible reference in format like 'John 3:16 (NIV)'"
+}
 
-        .section h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin-bottom: 30px;
-        }
+Important:
+- The englishMeaning should be 2-3 sentences explaining the name's origin and significance
+- The chineseMeanings array should have one object for each character in the Chinese name
+- The summary must be encouraging with Christian themes, one continuous paragraph, and not start with "Dear"
+- The verseText should be just the quote without quotation marks
+- Make sure all JSON is valid and properly formatted`;
 
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: var(--text);
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.95rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 14px 15px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: 'Lora', serif;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            color: var(--text);
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 10px;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(44, 62, 80, 0.2);
-        }
-
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            border: 4px solid rgba(212, 175, 55, 0.1);
-            border-top: 4px solid var(--accent);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading p {
-            color: var(--text-light);
-            font-size: 1.1rem;
-        }
-
-        .result-section {
-            display: none;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        .result-section.active {
-            display: block;
-        }
-
-        .name-card {
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-            border-left: 4px solid var(--accent);
-            margin-bottom: 30px;
-        }
-
-        .name-header {
-            margin-bottom: 25px;
-            border-bottom: 2px solid var(--lighter);
-            padding-bottom: 20px;
-        }
-
-        .english-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .chinese-name {
-            font-size: 1.8rem;
-            color: var(--accent);
-            font-weight: 600;
-            letter-spacing: 3px;
-        }
-
-        .section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            color: var(--primary);
-            margin-top: 28px;
-            margin-bottom: 15px;
-        }
-
-        .meaning-text {
-            color: var(--text);
-            margin-bottom: 15px;
-            line-height: 1.9;
-        }
-
-        .character-meaning {
-            background: var(--lighter);
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            border-left: 3px solid var(--accent);
-        }
-
-        .character {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--accent);
-            margin-right: 10px;
-        }
-
-        .summary-section {
-            background: linear-gradient(135deg, rgba(44, 62, 80, 0.05), rgba(212, 175, 55, 0.05));
-            padding: 20px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-style: italic;
-            line-height: 1.9;
-        }
-
-        .bible-verse {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(52, 73, 94, 0.1));
-            padding: 20px;
-            border-radius: 4px;
-            margin-top: 15px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .verse-text {
-            font-style: italic;
-            color: var(--text);
-            margin-bottom: 10px;
-            line-height: 1.9;
-        }
-
-        .verse-ref {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            font-weight: 600;
-        }
-
-        .error {
-            background: #fadbd8;
-            border-left: 4px solid #e74c3c;
-            padding: 20px;
-            border-radius: 4px;
-            color: #c0392b;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .error.active {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .english-name {
-                font-size: 1.8rem;
-            }
-
-            .chinese-name {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Name Blessings</h1>
-            <p class="subtitle">Generate English & Chinese Name Meanings</p>
-            <div class="accent-line"></div>
-        </header>
-
-        <div class="error" id="error"></div>
-
-        <div class="section">
-            <h2>Enter Name Information</h2>
-            <form id="nameForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="englishName">English Name</label>
-                        <input type="text" id="englishName" placeholder="e.g., Christian" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="chineseName">Chinese Name</label>
-                        <input type="text" id="chineseName" placeholder="e.g., 滋业君" required>
-                    </div>
-                </div>
-                <button type="submit" id="generateBtn">Generate Meaning</button>
-            </form>
-        </div>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Generating meaning...</p>
-        </div>
-
-        <div class="result-section" id="resultSection">
-            <div class="name-card" id="resultCard"></div>
-        </div>
-    </div>
-
-    <script>
-        document.getElementById('nameForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const errorDiv = document.getElementById('error');
-            errorDiv.classList.remove('active');
-
-            const englishName = document.getElementById('englishName').value.trim();
-            const chineseName = document.getElementById('chineseName').value.trim();
-
-            if (!englishName || !chineseName) {
-                showError('Please enter both English and Chinese names.');
-                return;
-            }
-
-            const generateBtn = document.getElementById('generateBtn');
-            const loading = document.getElementById('loading');
-            const resultSection = document.getElementById('resultSection');
-
-            generateBtn.disabled = true;
-            loading.style.display = 'block';
-            resultSection.classList.remove('active');
-
-            try {
-                const response = await fetch('/api/generateName', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        englishName,
-                        chineseName
-                    })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to generate meaning');
-                }
-
-                const result = await response.json();
-                displayResult(result, englishName, chineseName);
-                resultSection.classList.add('active');
-            } catch (error) {
-                showError('Error: ' + error.message);
-                console.error(error);
-            } finally {
-                generateBtn.disabled = false;
-                loading.style.display = 'none';
-            }
+    try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.CLAUDE_API_KEY,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-haiku-4-5-20251001',
+                max_tokens: 1000,
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ]
+            })
         });
 
-        function displayResult(data, englishName, chineseName) {
-            let html = `
-                <div class="name-header">
-                    <div class="english-name">${escapeHtml(englishName)}</div>
-                    <div class="chinese-name">${escapeHtml(chineseName)}</div>
-                </div>
-
-                <div class="section-title">English Name</div>
-                <div class="meaning-text">${escapeHtml(data.englishMeaning)}</div>
-
-                <div class="section-title">Chinese Name</div>
-            `;
-
-            if (data.chineseMeanings && Array.isArray(data.chineseMeanings)) {
-                data.chineseMeanings.forEach(cm => {
-                    html += `
-                        <div class="character-meaning">
-                            <span class="character">${escapeHtml(cm.character)}</span>
-                            <span>${escapeHtml(cm.meaning)}</span>
-                        </div>
-                    `;
-                });
-            }
-
-            html += `
-                <div class="section-title">Summary & Encouragement</div>
-                <div class="summary-section">${escapeHtml(data.summary)}</div>
-
-                <div class="section-title">Bible Verse</div>
-                <div class="bible-verse">
-                    <div class="verse-text">"${escapeHtml(data.verseText)}"</div>
-                    <div class="verse-ref">— ${escapeHtml(data.verseRef)}</div>
-                </div>
-            `;
-
-            document.getElementById('resultCard').innerHTML = html;
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Claude API error:', errorData);
+            return res.status(response.status).json({ 
+                error: errorData.error?.message || 'API request failed' 
+            });
         }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('active');
+        const data = await response.json();
+
+        if (!data.content || !data.content[0]?.text) {
+            return res.status(500).json({ error: 'Invalid response from API' });
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-    </script>
-</body>
-</html>
+        const responseText = data.content[0].text;
+        let jsonText = responseText;
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+        
+        const result = JSON.parse(jsonText.trim());
+        return res.status(200).json(result);
+
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+}
